@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 # The MIT License (MIT)
-#
 # Copyright (c) 2013 InVitae Corp, http://invitae.com
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
