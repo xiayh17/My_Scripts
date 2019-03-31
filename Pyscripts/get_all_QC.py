@@ -2,7 +2,9 @@ import os,sys
 import glob
 import pandas as pd
 import io
-
+'''
+get QC table of BGISEQ fastq data with multiple barcodes
+'''
 
 class AutoVivification(dict):             # my_dict[1][2] = 3   ==> {1: {2: 3}}
 	def __getitem__(self, item):
