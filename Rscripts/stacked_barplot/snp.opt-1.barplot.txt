@@ -1,0 +1,13 @@
+gc_bin	Total	opt.FN	opt_onestep.FN	onestep_unique.FN
+gc15	32	0	0	0
+gc15to20	28	0	0	0
+gc20to25	453	5	7	3
+gc25to30	2093	8	9	5
+gc30to55	21209	188	189	22
+gc55to60	5777	84	83	7
+gc60to65	5983	69	72	7
+gc65to70	4176	28	32	8
+gc70to75	1930	13	12	4
+gc75to80	828	16	38	29
+gc80to85	241	11	44	35
+gc85	20	2	6	4
