@@ -5,6 +5,7 @@ Calculate the RNA-seq reads coverage over gene body.
 Note:
 1) Only input sorted and indexed BAM file(s). SAM format is not supported.
 2) Genes/transcripts with mRNA length < 100 will be skipped (Number specified to "-l" cannot be < 100). 
+3) Modified by WGY in order to calculate transcripts bams instead of genome bams. 
 '''
 
 #import built-in modules
