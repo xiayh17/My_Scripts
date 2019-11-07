@@ -37,8 +37,9 @@ def region_depth_count(bamfile, chrom, start, end):
 	cov_base,coverage = 0,0
 	for pos in range(start+1, end+1):
 		depth_d.setdefault(pos, 0)
-	
-	for pileupcolumn in bamfile.pileup(reference=chrom, start=start, end=end):
+		
+	#for pileupcolumn in bamfile.pileup(reference=chrom, start=start, end=end, truncate=True, flag_filter=800, min_base_quality=10, min_mapping_quality=1, ignore_orphans=True):
+	for pileupcolumn in bamfile.pileup(reference=chrom, start=start, end=end, truncate=True):
 		pos = pileupcolumn.reference_pos + 1      #0 based
 		if pos in depth_d:
 			depth_d[pos] = pileupcolumn.nsegments
