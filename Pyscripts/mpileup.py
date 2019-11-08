@@ -1,6 +1,7 @@
 '''
 - pysam pileup USAGE, compared with samtools mpileup
 - DEMO BAM: https://github.com/pysam-developers/pysam/tree/master/tests/pysam_data
+- By default, mpileup will ignore any reads that are marked as UNMAP (0x4), DUP (0x400), SECONDARY (0x100) or QCFAIL (0x200).
 '''
 
 import sys
