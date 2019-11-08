@@ -1,5 +1,6 @@
 '''
-pysam pileup USAGE, compared with samtools mpileup
+- pysam pileup USAGE, compared with samtools mpileup
+- DEMO BAM: https://github.com/pysam-developers/pysam/tree/master/tests/pysam_data
 '''
 
 import sys
