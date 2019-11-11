@@ -52,7 +52,7 @@ def region_depth_count(bamfile, chrom, start, end):
 	return row
 
 
-def split_file(bed_fname, chunk_size=5000):
+def to_chunks(bed_fname, chunk_size=5000):
 	"""Split a BED file into `chunk_size`-line parts for parallelization."""
 	import os
 	k, chunk = 0, 0
@@ -77,7 +77,47 @@ def split_file(bed_fname, chunk_size=5000):
 	if k % chunk_size:
 		outfile.close()
 		yield name
+		
+def bedcov(bam_fname, bed_fname): ## pysam.bedcov ===> 'chr1\t200\t300\t2050\n'
+	"""Calculate depth of all regions in a BED file via samtools (pysam) bedcov.
+	i.e. mean pileup depth across each region.
+	"""
+	# Count bases in each region; exclude low-MAPQ reads
+    cmd = [bed_fname, bam_fname]
+    if min_mapq and min_mapq > 0:
+        cmd.extend(['-Q', bytes(min_mapq)])
+    try:
+        raw = pysam.bedcov(*cmd, split_lines=False)
+    except pysam.SamtoolsError as exc:
+        raise ValueError("Failed processing %r coverages in %r regions. "
+                         "PySAM error: %s" % (bam_fname, bed_fname, exc))
+    if not raw:
+        raise ValueError("BED file %r chromosome names don't match any in "
+                         "BAM file %r" % (bed_fname, bam_fname))
+    columns = detect_bedcov_columns(raw)
+    table = pd.read_csv(StringIO(raw), sep='\t', names=columns, usecols=columns)  #******************
+    return table
 
+def detect_bedcov_columns(text):
+    """Determine which 'bedcov' output columns to keep.
+
+    Format is the input BED plus a final appended column with the count of
+    basepairs mapped within each row's region. The input BED might have 3
+    columns (regions without names), 4 (named regions), or more (arbitrary
+    columns after 'gene').
+    """
+    firstline = text[:text.index('\n')]
+    tabcount = firstline.count('\t')
+    if tabcount < 3:
+        raise RuntimeError("Bad line from bedcov:\n%r" % firstline)
+    if tabcount == 3:
+        return ['chromosome', 'start', 'end', 'basecount']
+    if tabcount == 4:
+        return ['chromosome', 'start', 'end', 'gene', 'basecount']
+    # Input BED has arbitrary columns after 'gene' -- ignore them
+    fillers = ["_%d" % i for i in range(1, tabcount - 3)]
+    return ['chromosome', 'start', 'end', 'gene'] + fillers + ['basecount']		
+		
 def split_dataframe(df, split_n=2):
 	import numpy as np
 	split_df = np.array_split(df, split_n)
