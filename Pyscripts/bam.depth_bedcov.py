@@ -8,6 +8,7 @@ import gzip
 from concurrent import futures
 import numpy as np
 import pandas as pd
+from skgenome.tabio import bedio
 
 
 def main(bed_fname, bam_fname, by_count, min_mapq, processes):
@@ -18,13 +19,77 @@ def main(bed_fname, bam_fname, by_count, min_mapq, processes):
 
       
 
-    
-    
-    
+ 
+def coverage_count(bed_fname, bam_fname, min_mapq, procs=1)
+  regions = bedio.read(bed_fname)
+  if procs == 1:
+    bamfile = pysam.Samfile(bam_fname, 'rb')
+    for chrom, subregions in by_chromosome(regions):
+      logging.info("Processing chromosome %s of %s"
+                   chrom, os.path.basename(bam_fname))
+      for count, row in _rdc_chunk(bamfile, subregions, min_mapq):
+        yield [count, row]
+  else:
+    with futures.ProcessPoolExecutor(procs) as pool:
+      args_iter = ((bam_fname, subr, min_mapq) for _c, subr in regions.by_chromosome())
+      for chunk in pool.map(_rdc, args_iter):
+        for count, row in chunk:
+          yield [count, row]
+          
+def _rdc(args):
+    """Wrapper for parallel."""
+    return list(_rdc_chunk(*args))
+  
+def _rdc_chunk(bamfile, regions, min_mapq):
+    if isinstance(bamfile, basestring):
+        bamfile = pysam.Samfile(bamfile, 'rb')
+    for chrom, start, end, gene in regions.coords(["gene"]):
+        yield region_depth_count(bamfile, chrom, start, end, gene, min_mapq)
+ 
+def region_depth_count(bamfile, chrom, start, end, gene, min_mapq):
+    """Calculate depth of a region via pysam count.
+
+    i.e. counting the number of read starts in a region, then scaling for read
+    length and region width to estimate depth.
+
+    Coordinates are 0-based, per pysam.
+    """
+    def filter_read(read):
+        """True if the given read should be counted towards coverage."""
+        return not (read.is_duplicate
+                    or read.is_secondary
+                    or read.is_unmapped
+                    or read.is_qcfail
+                    or read.mapq < min_mapq)
+
+    count = 0
+    bases = 0
+    for read in bamfile.fetch(reference=chrom, start=start, end=end):
+        if filter_read(read):
+            count += 1
+            # Only count the bases aligned to the region
+            rlen = read.query_alignment_length
+            if read.pos < start:
+                rlen -= start - read.pos
+            if read.pos + read.query_alignment_length > end:
+                rlen -= read.pos + read.query_alignment_length - end
+            bases += rlen
+    depth = bases / (end - start) if end > start else 0
+    row = (chrom, start, end, gene,
+           math.log(depth, 2) if depth else NULL_LOG2_COVERAGE,
+           depth)
+    return count, row
+
+
+          
+def by_chromosome(table):
+  """Iterate over bins grouped by chromosome name."""
+  for chrom, subtable in table.groupby("chromosome", sort=False):
+    yield chrom, table.as_dataframe(subtable)
     
 
 
-def coverage_bedcov(bed_fname, bam_fname, by_count, min_mapq, processes):
+def coverage_bedcov(bed_fname, bam_fname, min_mapq, procs=1):
   """Calculate coverage depth in parallel using pysam.bedcov
   PARALLEL: bed_fname splited into raw chunks (temp files)
   OUTPUT: pandas dataframe
