@@ -46,7 +46,7 @@ def _rdc_chunk(bamfile, regions, min_mapq):
     for chrom, start, end, gene in regions.coords(["gene"]):
         yield region_depth_count(bamfile, chrom, start, end, gene, min_mapq)
  
-def region_depth_count(bamfile, chrom, start, end, gene, min_mapq):
+def region_depth_fetch(bamfile, chrom, start, end, gene, min_mapq):
     """Calculate depth of a region via pysam count.
 
     i.e. counting the number of read starts in a region, then scaling for read
@@ -80,6 +80,35 @@ def region_depth_count(bamfile, chrom, start, end, gene, min_mapq):
            depth)
     return count, row
 
+  def region_depth_pileup(bamfile, chrom, start, end, gene, min_mapq):
+        """Calculate depth of a region via pysam count.
+
+    i.e. counting the number of read starts in a region, then scaling for read
+    length and region width to estimate depth.
+
+    Coordinates are 0-based, per pysam.
+    """
+    depth_d = dict()
+    start = int(start)
+	  end = int(end)
+	  chrom = str(chrom)
+	  cov_base,coverage = 0,0
+	  for pos in range(start+1, end+1):
+		  depth_d.setdefault(pos, 0)
+		
+	#for pileupcolumn in bamfile.pileup(reference=chrom, start=start, end=end, truncate=True, flag_filter=800, min_base_quality=10, min_mapping_quality=1,  
+  for pileupcolumn in bamfile.pileup(reference=chrom, start=start, end=end,         ##defalt filter [UNMAP,SECONDARY,QCFAIL,DUP]
+                                     truncate=True, min_mapping_quality=min_mapq,):
+    pos = pileupcolumn.reference_pos + 1      #0 based
+	  if pos in depth_d:
+		  depth_d[pos] = pileupcolumn.nsegments
+			#cov_base+=1
+      
+	#coverage = float(cov_base/len(depth_d))
+	#row = (chrom, start, end ,depth_d,coverage)
+  depth = float(sum(list(depth_d.values()))/len(list(depth_d)))
+  row = (chrom, start, end, gene, math.log(depth, 2) if depth else NULL_LOG2_COVERAGE, depth)
+	return row   #### TODO count, row
 
           
 def by_chromosome(table):
