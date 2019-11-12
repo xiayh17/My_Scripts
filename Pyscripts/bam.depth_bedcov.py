@@ -28,13 +28,13 @@ def coverage_count(bed_fname, bam_fname, min_mapq, procs=1)
       logging.info("Processing chromosome %s of %s"
                    chrom, os.path.basename(bam_fname))
       for count, row in _rdc_chunk(bamfile, subregions, min_mapq):
-        yield [count, row]
+        yield row
   else:
     with futures.ProcessPoolExecutor(procs) as pool:
       args_iter = ((bam_fname, subr, min_mapq) for _c, subr in regions.by_chromosome())
       for chunk in pool.map(_rdc, args_iter):
         for count, row in chunk:
-          yield [count, row]
+          yield row
           
 def _rdc(args):
     """Wrapper for parallel."""
@@ -78,7 +78,8 @@ def region_depth_fetch(bamfile, chrom, start, end, gene, min_mapq):
     row = (chrom, start, end, gene,
            math.log(depth, 2) if depth else NULL_LOG2_COVERAGE,
            depth)
-    return count, row
+    #return count, row
+    return row
 
   def region_depth_pileup(bamfile, chrom, start, end, gene, min_mapq):
         """Calculate depth of a region via pysam count.
@@ -108,7 +109,7 @@ def region_depth_fetch(bamfile, chrom, start, end, gene, min_mapq):
 	#row = (chrom, start, end ,depth_d,coverage)
   depth = float(sum(list(depth_d.values()))/len(list(depth_d)))
   row = (chrom, start, end, gene, math.log(depth, 2) if depth else NULL_LOG2_COVERAGE, depth)
-	return row   #### TODO count, row
+  return row
 
           
 def by_chromosome(table):
