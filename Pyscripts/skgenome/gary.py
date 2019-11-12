@@ -33,7 +33,7 @@ class GenomicArray(object):
             (isinstance(data_table, pd.DataFrame) and not len(data_table.columns))
            ):
             data_table = self._make_blank()
-        else:
+        else:  
             if not isinstance(data_table, pd.DataFrame):
                 # Rarely if ever needed -- prefer from_rows, from_columns, etc.
                 data_table = pd.DataFrame(data_table)
