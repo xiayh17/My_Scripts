@@ -1,11 +1,11 @@
 #Supplementary Data 3: count_spacers.py
 
-from Bio import SeqIO
 import csv
 from collections import OrderedDict
 import numpy as np
 import sys
 import argparse
+import gzip,io
 
 KEY_REGION_START = 30 #start index of key region
 KEY_REGION_END = 55 #end index of key region
