@@ -84,7 +84,7 @@ def count_spacers(input_file, fastq_file, output_file, guide_g):
     readiter = read_fastq(fastq_file)
     for l1,l2,l3,l4 in readiter: #contains the seq and Qscore etc.
         num_reads += 1
-        read_sequence = str.upper(l1)
+        read_sequence = str.upper(l2)
         key_region = read_sequence[KEY_REGION_START:KEY_REGION_END]
         key_index = key_region.find(KEY)
         if key_index >= 0:
